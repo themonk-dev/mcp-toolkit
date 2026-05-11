@@ -1,0 +1,46 @@
+{
+  "name": "mcp-toolkit",
+  "version": "1.0.0",
+  "description": "Modular, plug-and-play MCP server with OIDC/JWT/API-key auth, policy filtering, and dual-runtime (Node + Cloudflare Workers).",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter @mcp-toolkit/server dev",
+    "dev:worker": "bun --filter @mcp-toolkit/server dev:worker",
+    "start": "bun --filter @mcp-toolkit/server start",
+    "build": "bun --filter @mcp-toolkit/server build",
+    "deploy": "bun --filter @mcp-toolkit/server deploy",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "streamable-http",
+    "oauth2",
+    "oidc",
+    "monorepo"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.3",
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@types/node": "^24.2.0",
+    "bun-types": "^1.3.13",
+    "typescript": "^5.9.2",
+    "wrangler": "^3.94.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
+  }
+}

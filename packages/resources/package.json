@@ -1,0 +1,21 @@
+{
+  "name": "@mcp-toolkit/resources",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Resource definition contract + registry for mcp-toolkit. Bring your own resources, or use the bundled examples.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*",
+    "@mcp-toolkit/mcp": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "zod": "^3.23.8"
+  }
+}

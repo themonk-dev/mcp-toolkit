@@ -1,0 +1,26 @@
+{
+  "name": "@mcp-toolkit/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pluggable MCP server builder for mcp-toolkit: composes auth + policy + tools/prompts/resources.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts",
+    "./runtime/als-node": "./src/runtime/als-node.ts",
+    "./runtime/als-workers": "./src/runtime/als-workers.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/auth": "workspace:*",
+    "@mcp-toolkit/core": "workspace:*",
+    "@mcp-toolkit/policy": "workspace:*",
+    "@mcp-toolkit/storage": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.25.0"
+  }
+}

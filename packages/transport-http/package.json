@@ -1,0 +1,31 @@
+{
+  "name": "@mcp-toolkit/transport-http",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hono-based HTTP transport for mcp-toolkit with Node and Cloudflare Workers adapters.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node/index.ts",
+    "./workers": "./src/workers/index.ts",
+    "./oauth-server": "./src/oauth-server.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/auth": "workspace:*",
+    "@mcp-toolkit/core": "workspace:*",
+    "@mcp-toolkit/mcp": "workspace:*",
+    "@mcp-toolkit/policy": "workspace:*",
+    "@mcp-toolkit/storage": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "fetch-to-node": "^2.1.0",
+    "hono": "^4.8.12",
+    "itty-router": "^5.0.17"
+  },
+  "optionalDependencies": {
+    "@hono/node-server": "^1.13.1"
+  }
+}

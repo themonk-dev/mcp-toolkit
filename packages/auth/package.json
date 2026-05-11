@@ -1,0 +1,42 @@
+{
+  "name": "@mcp-toolkit/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pluggable auth for mcp-toolkit: AuthStrategy interface + OIDC, JWT, API-key, and none strategies.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./oidc": "./src/strategies/oidc.ts",
+    "./jwt": "./src/strategies/jwt.ts",
+    "./apikey": "./src/strategies/apikey.ts",
+    "./none": "./src/strategies/none.ts",
+    "./identity": "./src/identity.ts",
+    "./config": "./src/config.ts",
+    "./oauth/discovery": "./src/oauth/discovery.ts",
+    "./oauth/discovery-handlers": "./src/oauth/discovery-handlers.ts",
+    "./oauth/endpoints": "./src/oauth/endpoints.ts",
+    "./oauth/flow": "./src/oauth/flow.ts",
+    "./oauth/input-parsers": "./src/oauth/input-parsers.ts",
+    "./oauth/refresh": "./src/oauth/refresh.ts",
+    "./oauth/types": "./src/oauth/types.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*",
+    "@mcp-toolkit/storage": "workspace:*",
+    "jose": "^6.1.3",
+    "oauth4webapi": "^3.8.3",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "hono": "^4.8.12"
+  },
+  "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,67 @@
+name = "mcp-toolkit-worker"
+main = "apps/server/src/worker.ts"
+compatibility_date = "2025-06-18"
+workers_dev = true
+compatibility_flags = ["nodejs_compat"]
+
+# Operator config: 9 grouped JSON env vars. Mirror the layout from
+# `apps/server/.env.example`. Quotes are TOML triple-singles for safety.
+# Secrets (anything sensitive) go through `wrangler secret put`, not here.
+
+[vars]
+# Networking
+SERVER = '''{"host":"0.0.0.0","port":8787,"allowedOrigins":[]}'''
+
+# Runtime knobs
+RUNTIME = '''{"nodeEnv":"production","logLevel":"info"}'''
+
+# Auth — strategy selection. Set to "none" for unauthenticated mode.
+AUTH = '''{"strategy":"none","requireRs":false}'''
+
+# Auth — pre-shared credentials (apikey / bearer / custom / jwt strategies).
+# Leave keys empty here; put real values in `wrangler secret put` and they
+# override the matching field at runtime.
+AUTH_KEYS = '''{"apikey":{"headerName":"x-api-key"}}'''
+
+# Auth — OAuth/OIDC stack (only used when strategy=oidc or oauth).
+# Same rule for secrets: clientSecret comes from `wrangler secret put`.
+AUTH_OAUTH = '''{"oauth":{"scopes":"","redirectUri":"http://localhost:8787/callback"},"oidc":{"issuer":""},"provider":{"clientId":""},"cimd":{"enabled":true}}'''
+
+# MCP — server identity (returned on initialize)
+MCP = '''{"title":"mcp-toolkit on Workers","version":"1.0.0","protocolVersion":"2025-06-18","userAuditOnList":false}'''
+
+# Optional SEP-973 icon — drop the var entirely if unused.
+# MCP_ICON = '''{"url":"https://your-cdn/icon.png","mime":"image/png","sizes":["512x512"]}'''
+
+# Storage. `tokensFile` is ignored on Workers (KV is used instead); the
+# encryption key is honored if provided via `wrangler secret put`.
+STORAGE = '''{"tokensFile":".data/tokens.json"}'''
+
+# Policy — Workers requires inline content. `POLICY.path` is Node-only.
+POLICY = '''{"content":""}'''
+
+# Secrets (DO NOT store in [vars]) — wire via `wrangler secret put`:
+#
+#   AUTH_OAUTH   — overrides for clientSecret if you can't inline it
+#   AUTH_KEYS    — overrides for the apikey / bearer / jwt fields
+#   STORAGE      — token encryption key (REQUIRED for production):
+#                    openssl rand -base64 32 | tr -d '=' | tr '+/' '-_'
+#                    wrangler secret put STORAGE
+#                    (paste a JSON blob carrying `tokensEncKey`)
+#
+# Without an encryption key, provider tokens are stored unencrypted in KV.
+
+[[kv_namespaces]]
+binding = "TOKENS"
+# Create with: wrangler kv:namespace create TOKENS
+id = "YOUR_KV_NAMESPACE_ID"
+
+# Optional: a session-store KV (otherwise sessions are per-isolate in memory).
+# [[kv_namespaces]]
+# binding = "SESSIONS"
+# id = "YOUR_SESSIONS_KV_ID"
+
+# Preview KV (for `wrangler dev`)
+# [[kv_namespaces]]
+# binding = "TOKENS"
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"

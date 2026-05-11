@@ -1,0 +1,34 @@
+services:
+  mcp-toolkit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mcp-toolkit:latest
+    container_name: mcp-toolkit
+    restart: unless-stopped
+
+    # Operator config lives in apps/server/.env — same file used by `bun run dev`.
+    env_file:
+      - apps/server/.env
+
+    # The default .env.example binds SERVER.host to 127.0.0.1, which only
+    # listens on loopback inside the container and makes port mapping useless.
+    # Uncomment to force the container to bind on all interfaces (this overrides
+    # the SERVER value from env_file). Adjust port/allowedOrigins to match yours.
+    # environment:
+    #   SERVER: '{"host":"0.0.0.0","port":3000,"allowedOrigins":[]}'
+
+    ports:
+      - "3000:3000"  # MCP HTTP transport
+      - "3001:3001"  # OAuth AS (only used when AUTH.strategy is oidc or oauth)
+
+    volumes:
+      # Persist OAuth/RS tokens written by FileTokenStore (.data/tokens.json).
+      - mcp-toolkit-data:/app/apps/server/.data
+
+      # Optional: bind-mount policy files if you use POLICY.path instead of
+      # POLICY.content. Paths in POLICY.path resolve relative to /app/apps/server.
+      # - ./policy:/app/apps/server/policy:ro
+
+volumes:
+  mcp-toolkit-data:

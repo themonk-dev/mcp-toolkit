@@ -1,0 +1,50 @@
+# Keep build context small and secret-free.
+
+# VCS
+.git
+.gitignore
+
+# Local state and secrets — never bake into image layers
+.env
+.env.*
+!.env.example
+.data
+**/.data
+.wrangler
+.dev.vars
+
+# Installed deps (re-resolved inside the image)
+node_modules
+**/node_modules
+.bun
+.pnpm-store
+
+# Build / cache artefacts
+dist
+**/dist
+coverage
+**/coverage
+.cache
+.turbo
+.parcel-cache
+*.tsbuildinfo
+
+# Editor / agent state
+.claude
+.agents
+.cursor
+.vscode
+.idea
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker bits (don't copy into the image)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml

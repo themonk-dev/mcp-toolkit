@@ -1,0 +1,20 @@
+{
+  "name": "@mcp-toolkit/policy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pluggable policy engine for mcp-toolkit: filter tools/prompts/resources by group membership.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*",
+    "yaml": "^2.8.4",
+    "zod": "^3.23.8"
+  }
+}

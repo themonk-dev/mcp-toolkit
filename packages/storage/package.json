@@ -1,0 +1,30 @@
+{
+  "name": "@mcp-toolkit/storage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Storage abstractions for mcp-toolkit: in-memory, file (Node), SQLite (Node), KV (Workers). AES-GCM token encryption.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node/file": "./src/node/file.ts",
+    "./node/sqlite": "./src/node/sqlite.ts",
+    "./workers/kv": "./src/workers/kv.ts",
+    "./crypto": "./src/crypto/aes-gcm.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.7.0"
+  }
+}

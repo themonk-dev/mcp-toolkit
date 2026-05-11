@@ -1,0 +1,22 @@
+{
+  "name": "@mcp-toolkit/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared types, logger, utils, and HTTP helpers for mcp-toolkit packages.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./logger": "./src/logger.ts",
+    "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./http": "./src/http/index.ts",
+    "./zod-helpers": "./src/zod-helpers.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

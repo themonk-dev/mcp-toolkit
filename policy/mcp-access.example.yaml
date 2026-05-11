@@ -1,0 +1,37 @@
+# Example MCP group policy (YAML or JSON).
+# Copy to your repo and set MCP_POLICY_PATH (Node) or MCP_POLICY (inline, e.g. Workers).
+#
+# mode: enforce — default deny: only tools/resources/prompts matched by a rule are allowed.
+# Principal groups come from OIDC id_token claims: `groups`, `memberOf`, or `member_of`.
+#
+# allow_groups: ["*"] means any authenticated principal (sub, email, preferred_username, or any group).
+# Without id_token claims, clients typically cannot satisfy "*" rules.
+
+version: 1
+mode: enforce
+
+tools:
+  - name: health
+    allow_groups: ["*"]
+  - name: echo
+    allow_groups: ["*"]
+
+resources:
+  - uri: "config://server"
+    allow_groups: ["*"]
+  - uri: "docs://**"
+    allow_groups: ["*"]
+  - uri: "logo://**"
+    allow_groups: ["*"]
+  - uri: "status://**"
+    allow_groups: ["*"]
+  - uri: "example://**"
+    allow_groups: ["*"]
+
+prompts:
+  - name: greeting
+    allow_groups: ["*"]
+  - name: analysis
+    allow_groups: ["*"]
+  - name: multimodal
+    allow_groups: ["*"]
