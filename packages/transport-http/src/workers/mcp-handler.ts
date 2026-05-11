@@ -16,6 +16,7 @@ import type { AuthStrategy } from '@mcp-toolkit/auth';
 import { extractIdentityFromProvider, identityEquals } from '@mcp-toolkit/auth';
 import type { AuthApikeyConfig } from '@mcp-toolkit/auth/config';
 import { jsonResponse, sharedLogger as logger, withCors } from '@mcp-toolkit/core';
+import type { AuditSink } from '@mcp-toolkit/mcp';
 import {
   buildMcpIconsFromConfig,
   type CancellationRegistry,
@@ -137,7 +138,7 @@ export interface WorkersHandlerConfig {
     /** Browser-Origin allowlist (CORS / origin preflight). */
     allowedOrigins: readonly string[];
   };
-  /** MCP server metadata + icon descriptor + audit knobs. */
+  /** MCP server metadata + icon descriptor. */
   mcp: McpConfig;
   /** Only the apikey sub-slice is read here (header name + static fallback). */
   auth: {
@@ -155,6 +156,7 @@ export interface WorkersHandlerDeps {
     resources: ResourceDefinition[];
   };
   policy?: PolicyEnforcer;
+  audit?: AuditSink;
   config: WorkersHandlerConfig;
 }
 
@@ -194,7 +196,7 @@ export async function handleMcpRequest(
   request: Request,
   deps: WorkersHandlerDeps,
 ): Promise<Response> {
-  const { auth, tokenStore, sessionStore, registries, policy, config } = deps;
+  const { auth, tokenStore, sessionStore, registries, policy, audit, config } = deps;
   const apiKeyHeader = config.auth.apikey.headerName ?? 'x-api-key';
 
   // Parse JSON-RPC body. A malformed / non-JSON body used to silently become
@@ -419,7 +421,7 @@ export async function handleMcpRequest(
     getSessionState: () => sessionStateMap.get(sessionId),
     setSessionState: (state) => sessionStateMap.set(sessionId, state),
     cancellationRegistry,
-    userAuditOnList: config.mcp.userAuditOnList,
+    audit,
     sessionRecord,
     apiKeyHeader,
   };

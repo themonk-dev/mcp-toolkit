@@ -35,7 +35,6 @@ describe('sessions: credential mismatch on a known session → 401', () => {
     const { app, runtime } = await bootWorkers({
       AUTH_STRATEGY: 'apikey',
       API_KEY: 'A',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { 'x-api-key': 'A' });
@@ -70,7 +69,6 @@ describe('sessions: anonymous request on a credentialed session → 401 (H1 F-8)
   it('rejects anon request on a session bound to a real apiKey (workers)', async () => {
     const { app, runtime } = await bootWorkers({
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     // Boot a session through `none` (so no credentials are required for
@@ -101,7 +99,6 @@ describe('sessions: anonymous request on a credentialed session → 401 (H1 F-8)
       NODE_ENV: 'production',
       ALLOWED_ORIGINS: `${A},${B}`,
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { Origin: A });
@@ -121,7 +118,6 @@ describe('sessions: anonymous quota — bucketed per-Origin (G1 F-5)', () => {
       NODE_ENV: 'production',
       ALLOWED_ORIGINS: `${LEGIT},${ATTACKER}`,
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     // 1) A legitimate client establishes a session on its own Origin.
@@ -153,7 +149,6 @@ describe('sessions: anonymous quota — bucketed per-Origin (G1 F-5)', () => {
       NODE_ENV: 'production',
       ALLOWED_ORIGINS: `${A},${B}`,
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const a = await initializeSession(app, { Origin: A });
@@ -172,7 +167,6 @@ describe('sessions: anonymous quota — bucketed per-Origin (G1 F-5)', () => {
     // Such clients generally don't reuse sessions so this is acceptable.
     const { app, runtime } = await bootWorkers({
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const a = await initializeSession(app);

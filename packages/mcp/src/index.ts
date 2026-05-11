@@ -51,8 +51,8 @@ export {
   type McpIconEnv,
 } from './icons.ts';
 // `MCP_AUDIT_PROMPT_NAMES` and `MCP_AUDIT_RESOURCE_URIS` are intentionally NOT
-// re-exported — they are static test fixtures inlined into `MCP_USER_AUDIT_ON_LIST`
-// behaviour and have no external consumers.
+// re-exported — they are static test fixtures inlined into the audit-sink
+// catalog-list behaviour and have no external consumers.
 export {
   buildUnauthorizedChallenge,
   isLoopbackOrigin,
@@ -68,10 +68,19 @@ export {
   type JsonRpcError,
 } from './server-internals.ts';
 export * from './types.ts';
-// `MCP_CATALOG_LIST_METHODS` and `redactSecretPrefix` are NOT re-exported — they
-// are internal implementation details of `logMcpUserAuditCatalogList`.
 export {
+  type AuditCatalogListEvent,
+  type AuditEvent,
+  type AuditSubject,
+  type AuditToolCallEvent,
+} from './audit-event.ts';
+export { type AuditSink } from './audit-sink.ts';
+export { ConsoleAuditSink } from './audit-sink-console.ts';
+export { type AuditConfig, auditConfigSchema } from './audit-config.ts';
+// `MCP_CATALOG_LIST_METHODS` and `redactSecretPrefix` are NOT re-exported — they
+// are internal implementation details of `buildCatalogListEvent`.
+export {
+  buildCatalogListEvent,
   credentialPrefixFromHeaders,
   isMcpCatalogListMethod,
-  logMcpUserAuditCatalogList,
 } from './user-audit.ts';

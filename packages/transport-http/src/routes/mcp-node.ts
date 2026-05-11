@@ -23,10 +23,11 @@ import {
   sharedLogger as logger,
   type RequestContext,
 } from '@mcp-toolkit/core';
+import type { AuditSink } from '@mcp-toolkit/mcp';
 import {
+  buildCatalogListEvent,
   credentialPrefixFromHeaders,
   isMcpCatalogListMethod,
-  logMcpUserAuditCatalogList,
   type PromptDefinition,
   type ResourceDefinition,
   type ToolDefinition,
@@ -62,15 +63,15 @@ export interface McpNodeRoutesOptions {
    */
   transports: Map<string, WebStandardStreamableHTTPServerTransport>;
   sessionStore: SessionStore;
-  /** When true, log auth/session snapshot on catalog list methods. */
-  userAuditOnList?: boolean;
+  /** Optional audit sink — emits structured catalog-list events when set. */
+  audit?: AuditSink;
   /** API key header name (default 'x-api-key'). Used for audit redaction + session resolution. */
   apiKeyHeader?: string;
   /** Static API key from config — used as a fallback for session bookkeeping when no header / Bearer is present. */
   staticApiKey?: string;
   /**
-   * Registries — required for `logMcpUserAuditCatalogList` to enumerate the
-   * catalog when `userAuditOnList=true`. Pass empty arrays when audit is off.
+   * Registries — required for `buildCatalogListEvent` to enumerate the
+   * catalog when an `audit` sink is set. Pass empty arrays when audit is off.
    */
   registries?: {
     tools: ToolDefinition[];
@@ -165,7 +166,7 @@ export function buildMcpRoutes(opts: McpNodeRoutesOptions) {
     liveServers,
     transports,
     sessionStore,
-    userAuditOnList = false,
+    audit,
     apiKeyHeader = 'x-api-key',
     staticApiKey,
     registries,
@@ -487,25 +488,27 @@ export function buildMcpRoutes(opts: McpNodeRoutesOptions) {
       const catalogMethods = messages
         .map((msg) => msg.method)
         .filter((m): m is string => typeof m === 'string' && isMcpCatalogListMethod(m));
-      if (userAuditOnList && catalogMethods.length > 0) {
+      if (audit && catalogMethods.length > 0) {
         const sid = (plannedSid ?? sessionIdHeader ?? sessionId) as string;
-        logMcpUserAuditCatalogList({
-          methods: catalogMethods,
-          sessionId: sid,
-          requestId,
-          authStrategy: auth?.kind,
-          credentialPrefix: credentialPrefixFromHeaders(
-            auth?.resolvedHeaders,
-            apiKeyHeader,
-            auth?.rsToken,
-          ),
-          provider: auth?.provider,
-          sessionRecord: existingSession,
-          policy,
-          tools: registries?.tools ?? [],
-          prompts: registries?.prompts ?? [],
-          resources: registries?.resources ?? [],
-        });
+        void audit.emit(
+          buildCatalogListEvent({
+            methods: catalogMethods,
+            sessionId: sid,
+            requestId,
+            authStrategy: auth?.kind,
+            credentialPrefix: credentialPrefixFromHeaders(
+              auth?.resolvedHeaders,
+              apiKeyHeader,
+              auth?.rsToken,
+            ),
+            provider: auth?.provider,
+            sessionRecord: existingSession,
+            policy,
+            tools: registries?.tools ?? [],
+            prompts: registries?.prompts ?? [],
+            resources: registries?.resources ?? [],
+          }),
+        );
       }
 
       const requestContext: RequestContext = {

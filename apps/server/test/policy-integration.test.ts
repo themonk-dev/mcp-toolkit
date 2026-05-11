@@ -48,7 +48,6 @@ describe('policy-integration: prompts filtering', () => {
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
       MCP_POLICY: denyGreetingPolicy,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { 'x-api-key': 'secret' });
@@ -77,7 +76,6 @@ describe('policy-integration: prompts filtering', () => {
       AUTH_STRATEGY: 'none',
       AUTH_ENABLED: 'false',
       MCP_POLICY: denyGreetingPolicy,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app);
     expect(init.status).toBe(200);
@@ -100,7 +98,6 @@ describe('policy-integration: resources filtering', () => {
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
       MCP_POLICY: denyConfigResourcePolicy,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { 'x-api-key': 'secret' });
@@ -128,7 +125,6 @@ describe('policy-integration: resources filtering', () => {
       AUTH_STRATEGY: 'none',
       AUTH_ENABLED: 'false',
       MCP_POLICY: denyConfigResourcePolicy,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app);
     expect(init.status).toBe(200);
@@ -164,7 +160,6 @@ describe('policy-integration: default-deny under mode=enforce', () => {
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
       MCP_POLICY: policyYaml,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { 'x-api-key': 'secret' });

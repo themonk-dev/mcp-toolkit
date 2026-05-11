@@ -89,7 +89,6 @@ function flatOverridesToConfig(env: FlatEnv): Record<string, unknown> {
         mime: env.MCP_ICON_MIME,
         sizes: env.MCP_ICON_SIZES,
       },
-      userAuditOnList: env.MCP_USER_AUDIT_ON_LIST,
     },
     storage: {
       tokensFile: env.RS_TOKENS_FILE,

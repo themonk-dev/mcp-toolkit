@@ -96,7 +96,6 @@ const OIDC_ENV = {
   AUTH_REQUIRE_RS: 'true',
   OAUTH_SCOPES: 'openid email profile',
   OAUTH_REDIRECT_URI: 'http://localhost/oauth/callback',
-  MCP_USER_AUDIT_ON_LIST: 'false',
 };
 
 describe('oidc-e2e: shared setup', () => {

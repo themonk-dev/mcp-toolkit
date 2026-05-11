@@ -6,17 +6,13 @@
  * `{ ...MCP, icon: MCP_ICON }` for this schema to validate.
  *
  * Operator-facing layout:
- *   MCP        → { title, version, instructions, protocolVersion, userAuditOnList }
+ *   MCP        → { title, version, instructions, protocolVersion }
  *   MCP_ICON   → { url, mime, sizes }
  *
  * Runtime-agnostic — no `node:*` imports.
  */
 
-import {
-  boolFromString,
-  optionalString,
-  stringList,
-} from '@mcp-toolkit/core/zod-helpers';
+import { optionalString, stringList } from '@mcp-toolkit/core/zod-helpers';
 import { z } from 'zod';
 
 /** SEP-973 icon descriptor returned in `initialize` serverInfo.icons. */
@@ -43,12 +39,6 @@ export const mcpConfigSchema = z
     protocolVersion: z.string().default('2025-06-18'),
     /** SEP-973 icons (initialize handshake). */
     icon: iconSchema,
-    /**
-     * When true, log auth/session/policy snapshot on MCP catalog list methods
-     * (`tools/list`, `resources/list`, `resources/templates/list`,
-     * `prompts/list`).
-     */
-    userAuditOnList: boolFromString,
   })
   .default({});
 

@@ -80,7 +80,6 @@ describe('strategies-node: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
     expect(res.status).toBe(401);
@@ -95,7 +94,6 @@ describe('strategies-node: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app, { 'x-api-key': 'secret' });
     expect(init.status).toBe(200);
@@ -110,7 +108,6 @@ describe('strategies-node: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'false',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const denied = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
     expect(denied.status).toBe(401);
@@ -127,7 +124,6 @@ describe('strategies-node: AUTH_STRATEGY=bearer', () => {
       AUTH_STRATEGY: 'bearer',
       AUTH_ENABLED: 'true',
       BEARER_TOKEN: 'tok-123',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
     expect(res.status).toBe(401);
@@ -138,7 +134,6 @@ describe('strategies-node: AUTH_STRATEGY=bearer', () => {
       AUTH_STRATEGY: 'bearer',
       AUTH_ENABLED: 'true',
       BEARER_TOKEN: 'tok-123',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app, {
       authorization: 'Bearer tok-123',
@@ -169,7 +164,6 @@ describe('strategies-node: AUTH_STRATEGY=bearer', () => {
       AUTH_STRATEGY: 'bearer',
       AUTH_ENABLED: 'true',
       BEARER_TOKEN: 'tok-123',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(
       jsonReq('http://localhost/mcp', INIT_BODY, {

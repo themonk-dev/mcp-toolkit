@@ -6,16 +6,17 @@
  * parses each as JSON, composes them into the `AppConfig` input shape, and
  * validates via `appConfigSchema`. Runtime-agnostic — no `node:*` imports.
  *
- * Layout (9 env vars):
+ * Layout (10 env vars):
  *   SERVER       — host, port, allowedOrigins
  *   RUNTIME      — nodeEnv, logLevel, rpsLimit, concurrencyLimit
  *   AUTH         — strategy, requireRs, resourceUri, discoveryUrl
  *   AUTH_KEYS    — apikey, bearer, custom, jwt sub-objects
  *   AUTH_OAUTH   — oauth, oidc, provider, cimd sub-objects
- *   MCP          — title, version, instructions, protocolVersion, userAuditOnList
+ *   MCP          — title, version, instructions, protocolVersion
  *   MCP_ICON     — { url, mime, sizes }
  *   STORAGE      — tokensFile, tokensEncKey
  *   POLICY       — { content }   (or { path } on Node — folded by env-node.ts first)
+ *   AUDIT        — enabled
  *
  * Composition shape (what the loader passes to `appConfigSchema`):
  *   {
@@ -24,6 +25,7 @@
  *     mcp:    { ...MCP, icon: MCP_ICON },
  *     storage: STORAGE,
  *     policy:  POLICY,
+ *     audit:   AUDIT,
  *   }
  *
  * Per-group shallow merge is safe because keys within each parent namespace
@@ -42,6 +44,7 @@ export interface EnvStringMap {
   MCP_ICON?: string;
   STORAGE?: string;
   POLICY?: string;
+  AUDIT?: string;
   /**
    * JSON array of downstream MCP servers to proxy. Each element is one
    * connected server with its inline credential. See
@@ -108,6 +111,7 @@ export function loadConfigFromStrings(env: EnvStringMap): AppConfig {
   const mcpIcon = parseJsonVar('MCP_ICON', env.MCP_ICON);
   const storage = parseJsonVar('STORAGE', env.STORAGE);
   const policy = parseJsonVar('POLICY', env.POLICY);
+  const audit = parseJsonVar('AUDIT', env.AUDIT);
   const connectedServers = parseJsonArrayVar(
     'CONNECTED_SERVERS',
     env.CONNECTED_SERVERS,
@@ -119,6 +123,7 @@ export function loadConfigFromStrings(env: EnvStringMap): AppConfig {
     mcp: { ...mcpMeta, icon: mcpIcon },
     storage,
     policy: { content: policy.content as string | undefined },
+    audit,
     connectedServers,
   };
 

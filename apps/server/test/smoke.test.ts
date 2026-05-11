@@ -31,7 +31,6 @@ describe('smoke: apikey strategy', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     // (a) Without API key — should be rejected with 401.
@@ -81,7 +80,6 @@ describe('smoke: policy denies a tool', () => {
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
       MCP_POLICY: policyYaml,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const init = await initializeSession(app, { 'x-api-key': 'secret' });

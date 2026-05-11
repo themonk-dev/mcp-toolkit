@@ -39,6 +39,7 @@ async function main(): Promise<void> {
     liveServers: runtime.liveServers,
     auth: runtime.auth,
     policy: runtime.policy ?? undefined,
+    audit: runtime.audit ?? undefined,
     tokenStore: runtime.tokenStore,
     sessionStore: runtime.sessionStore,
     registries: runtime.registries,

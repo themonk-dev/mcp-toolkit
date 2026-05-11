@@ -1,5 +1,5 @@
 /**
- * Catalog shapes for MCP_USER_AUDIT_ON_LIST only.
+ * Catalog shapes for the audit-sink catalog-list event only.
  * When adding static resources, example template rows, or prompts, keep this in sync
  * with the registry packages (`@mcp-toolkit/resources`, `@mcp-toolkit/prompts`).
  */

@@ -25,7 +25,9 @@ import type { FlowConfigInput } from '@mcp-toolkit/auth/oauth/input-parsers';
 import { oidcStrategy } from '@mcp-toolkit/auth/oidc';
 import { sharedLogger as logger, type RequestContext } from '@mcp-toolkit/core';
 import {
+  type AuditSink,
   buildServer,
+  ConsoleAuditSink,
   type PromptDefinition,
   type ResourceDefinition,
   type ToolDefinition,
@@ -92,6 +94,7 @@ export interface ComposedRuntime {
   liveServers: Set<McpServer>;
   auth: AuthStrategy;
   policy: PolicyEnforcer | null;
+  audit: AuditSink | null;
   tokenStore: TokenStore;
   sessionStore: SessionStore;
   registries: {
@@ -258,6 +261,7 @@ export async function compose(opts: ComposeOptions): Promise<ComposedRuntime> {
 
   const auth = selectAuthStrategy(config, tokenStore);
   const policy = getPolicyEngine({ content: config.policy.content });
+  const audit: AuditSink | null = config.audit.enabled ? new ConsoleAuditSink() : null;
 
   // Warm any per-strategy caches (OIDC discovery, JWKS) before the first
   // request lands. Failures are logged but non-fatal — verify() will surface
@@ -316,6 +320,7 @@ export async function compose(opts: ComposeOptions): Promise<ComposedRuntime> {
     message: 'Runtime composed',
     auth: auth.kind,
     policy: policy?.isEnforced() ?? false,
+    audit: Boolean(audit),
     tools: tools.length,
     toolNames: tools.map((t) => t.name),
     localTools: localTools.length,
@@ -329,6 +334,7 @@ export async function compose(opts: ComposeOptions): Promise<ComposedRuntime> {
     liveServers,
     auth,
     policy,
+    audit,
     tokenStore,
     sessionStore,
     registries: { tools, prompts, resources },

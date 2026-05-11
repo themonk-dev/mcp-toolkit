@@ -78,6 +78,7 @@ export default {
       sessionStore: runtime.sessionStore,
       registries: runtime.registries,
       policy: runtime.policy ?? undefined,
+      audit: runtime.audit ?? undefined,
       config: buildWorkersHandlerConfigSlice(config),
     });
 

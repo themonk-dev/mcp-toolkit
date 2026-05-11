@@ -69,7 +69,6 @@ describe('strategies-workers: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
     expect(res.status).toBe(401);
@@ -80,7 +79,6 @@ describe('strategies-workers: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(
       jsonReq('http://localhost/mcp', INIT_BODY, { 'x-api-key': 'nope' }),
@@ -93,7 +91,6 @@ describe('strategies-workers: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       AUTH_ENABLED: 'true',
       API_KEY: 'secret',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app, { 'x-api-key': 'secret' });
     expect(init.status).toBe(200);
@@ -123,7 +120,6 @@ describe('strategies-workers: AUTH_STRATEGY=apikey', () => {
       AUTH_STRATEGY: 'apikey',
       API_KEY: 'secret',
       API_KEY_HEADER: 'X-Custom-Key',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const okInit = await initializeSession(app, { 'X-Custom-Key': 'secret' });
@@ -141,7 +137,6 @@ describe('strategies-workers: AUTH_STRATEGY=bearer', () => {
       AUTH_STRATEGY: 'bearer',
       AUTH_ENABLED: 'true',
       BEARER_TOKEN: 'tok-abc',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const res = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
     expect(res.status).toBe(401);
@@ -152,7 +147,6 @@ describe('strategies-workers: AUTH_STRATEGY=bearer', () => {
       AUTH_STRATEGY: 'bearer',
       AUTH_ENABLED: 'true',
       BEARER_TOKEN: 'tok-abc',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     const init = await initializeSession(app, {
       authorization: 'Bearer tok-abc',
@@ -176,7 +170,6 @@ describe('strategies-workers: malformed JSON body (G1 N5)', () => {
   it('returns 400 + -32700 parse error for non-JSON body', async () => {
     const { app } = await bootWorkers({
       AUTH_STRATEGY: 'none',
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
 
     const res = await app.fetch(
@@ -230,7 +223,6 @@ describe('strategies-workers: AUTH_STRATEGY=jwt', () => {
       JWT_JWKS_URL: JWKS_URL,
       JWT_ISSUER: jwks.issuer,
       JWT_AUDIENCE: jwks.audience,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     await withMockFetch(jwksResponder, async () => {
       const res = await app.fetch(jsonReq('http://localhost/mcp', INIT_BODY));
@@ -245,7 +237,6 @@ describe('strategies-workers: AUTH_STRATEGY=jwt', () => {
       JWT_JWKS_URL: JWKS_URL,
       JWT_ISSUER: jwks.issuer,
       JWT_AUDIENCE: jwks.audience,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     await withMockFetch(jwksResponder, async () => {
       const token = await jwks.sign({ sub: 'alice', groups: ['eng'] });
@@ -264,7 +255,6 @@ describe('strategies-workers: AUTH_STRATEGY=jwt', () => {
       JWT_JWKS_URL: JWKS_URL,
       JWT_ISSUER: jwks.issuer,
       JWT_AUDIENCE: jwks.audience,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     await withMockFetch(jwksResponder, async () => {
       // expiresIn supports negative offsets (e.g. '-1h' → expired one hour ago).
@@ -285,7 +275,6 @@ describe('strategies-workers: AUTH_STRATEGY=jwt', () => {
       JWT_JWKS_URL: JWKS_URL,
       JWT_ISSUER: jwks.issuer,
       JWT_AUDIENCE: jwks.audience,
-      MCP_USER_AUDIT_ON_LIST: 'false',
     });
     await withMockFetch(jwksResponder, async () => {
       const token = await jwks.sign({ sub: 'alice', aud: 'someone-else' });

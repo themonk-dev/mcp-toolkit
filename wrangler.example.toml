@@ -28,7 +28,7 @@ AUTH_KEYS = '''{"apikey":{"headerName":"x-api-key"}}'''
 AUTH_OAUTH = '''{"oauth":{"scopes":"","redirectUri":"http://localhost:8787/callback"},"oidc":{"issuer":""},"provider":{"clientId":""},"cimd":{"enabled":true}}'''
 
 # MCP — server identity (returned on initialize)
-MCP = '''{"title":"mcp-toolkit on Workers","version":"1.0.0","protocolVersion":"2025-06-18","userAuditOnList":false}'''
+MCP = '''{"title":"mcp-toolkit on Workers","version":"1.0.0","protocolVersion":"2025-06-18"}'''
 
 # Optional SEP-973 icon — drop the var entirely if unused.
 # MCP_ICON = '''{"url":"https://your-cdn/icon.png","mime":"image/png","sizes":["512x512"]}'''

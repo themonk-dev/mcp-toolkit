@@ -11,12 +11,13 @@ import { resolveIdentityForMcp } from '@mcp-toolkit/auth';
 import {
   type AuthStrategy as AuthStrategyKind,
   base64UrlDecode,
-  sharedLogger as logger,
   type ProviderInfo,
   type ProviderTokens,
+  type SessionIdentity,
 } from '@mcp-toolkit/core';
 import { buildPolicySubject, type PolicyEnforcer } from '@mcp-toolkit/policy';
 import type { SessionRecord } from '@mcp-toolkit/storage';
+import type { AuditCatalogListEvent } from './audit-event.ts';
 import type { PromptDefinition, ResourceDefinition, ToolDefinition } from './types.ts';
 
 export const MCP_CATALOG_LIST_METHODS = new Set([
@@ -196,17 +197,17 @@ function buildPolicyAuditBlock(params: {
   tools: ToolDefinition[];
   prompts: PromptDefinition[];
   resources: ResourceDefinition[];
-  sessionRecord?: SessionRecord | null;
-  provider?: ProviderTokens | ProviderInfo | null;
+  /**
+   * Pre-resolved identity from {@link resolveIdentityForMcp}. The caller
+   * resolves once and passes it in so the same identity feeds both the
+   * top-level `subject` field and the policy block (and `buildPolicySubject`
+   * is invoked once).
+   */
+  resolvedIdentity: SessionIdentity | null;
 }): Record<string, unknown> | undefined {
-  const { methods, policy, tools, prompts, resources, sessionRecord, provider } =
-    params;
+  const { methods, policy, tools, prompts, resources, resolvedIdentity } = params;
   const enforced = Boolean(policy?.isEnforced());
 
-  const resolvedIdentity = resolveIdentityForMcp(
-    sessionRecord?.identity,
-    provider ?? null,
-  );
   const subject = buildPolicySubject(
     resolvedIdentity,
     policy?.policy.principal_aliases,
@@ -307,7 +308,15 @@ export function credentialPrefixFromHeaders(
   return undefined;
 }
 
-export function logMcpUserAuditCatalogList(params: {
+/**
+ * Pure builder: assemble the structured audit event for an MCP catalog-list
+ * call. Emission is the {@link AuditSink}'s responsibility — this function
+ * has no I/O and no side effects.
+ *
+ * Mirrors the same data the legacy `logger.info('mcp_user_audit', ...)` call
+ * produced, restructured as an {@link AuditCatalogListEvent}.
+ */
+export function buildCatalogListEvent(params: {
   methods: string[];
   sessionId: string;
   requestId?: string | number;
@@ -324,7 +333,7 @@ export function logMcpUserAuditCatalogList(params: {
   tools: ToolDefinition[];
   prompts: PromptDefinition[];
   resources: ResourceDefinition[];
-}): void {
+}): AuditCatalogListEvent {
   const {
     methods,
     sessionId,
@@ -339,25 +348,49 @@ export function logMcpUserAuditCatalogList(params: {
     resources,
   } = params;
 
+  // Resolve identity once and feed both the top-level `subject` field and the
+  // policy block (which would otherwise call `resolveIdentityForMcp` again).
+  const resolvedIdentity = resolveIdentityForMcp(
+    sessionRecord?.identity,
+    provider ?? null,
+  );
+
+  const subject =
+    resolvedIdentity &&
+    (resolvedIdentity.sub !== undefined ||
+      resolvedIdentity.email !== undefined ||
+      (resolvedIdentity.groups && resolvedIdentity.groups.length > 0))
+      ? {
+          ...(resolvedIdentity.sub !== undefined ? { sub: resolvedIdentity.sub } : {}),
+          ...(resolvedIdentity.email !== undefined
+            ? { email: resolvedIdentity.email }
+            : {}),
+          ...(resolvedIdentity.groups && resolvedIdentity.groups.length > 0
+            ? { groups: resolvedIdentity.groups }
+            : {}),
+        }
+      : undefined;
+
   const policyBlock = buildPolicyAuditBlock({
     methods,
     policy,
     tools,
     prompts,
     resources,
-    sessionRecord,
-    provider,
-  });
+    resolvedIdentity,
+  }) as AuditCatalogListEvent['policy'];
 
-  void logger.info('mcp_user_audit', {
-    message: 'MCP catalog list',
+  return {
+    kind: 'mcp.catalog.list',
+    timestamp: new Date().toISOString(),
     sessionId,
-    methods,
     requestId,
+    methods,
     authStrategy,
     credentialPrefix,
+    subject,
     provider: providerAuditFields(provider),
     session: sessionAuditFields(sessionRecord),
     policy: policyBlock,
-  });
+  };
 }

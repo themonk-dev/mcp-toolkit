@@ -9,6 +9,7 @@
 import type { AuthStrategy } from '@mcp-toolkit/auth';
 import type { AuthConfig } from '@mcp-toolkit/auth/config';
 import type {
+  AuditSink,
   PromptDefinition,
   ResourceDefinition,
   ToolDefinition,
@@ -75,6 +76,7 @@ export interface BuildWorkersHandlerOptions {
     resources: ResourceDefinition[];
   };
   policy?: PolicyEnforcer;
+  audit?: AuditSink;
   config: BuildWorkersHandlerConfig;
 }
 
@@ -103,6 +105,7 @@ export function buildWorkersHandler(opts: BuildWorkersHandlerOptions): {
     sessionStore: opts.sessionStore,
     registries: opts.registries,
     policy: opts.policy,
+    audit: opts.audit,
     config: routerConfig,
   });
 

@@ -33,10 +33,11 @@ import type {
   ToolDefinition,
   ToolResult,
 } from './types.ts';
+import type { AuditSink } from './audit-sink.ts';
 import {
+  buildCatalogListEvent,
   credentialPrefixFromHeaders,
   isMcpCatalogListMethod,
-  logMcpUserAuditCatalogList,
 } from './user-audit.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -96,12 +97,15 @@ export interface McpDispatchContext {
   registries: McpDispatchRegistries;
   /** Optional policy enforcer; off when undefined. */
   policy?: PolicyEnforcer;
+  /**
+   * Optional audit sink; when present, dispatcher emits structured
+   * `mcp.tool.call` and `mcp.catalog.list` events.
+   */
+  audit?: AuditSink;
   getSessionState: () => McpSessionState | undefined;
   setSessionState: (state: McpSessionState) => void;
   /** Registry for tracking in-flight requests that can be cancelled */
   cancellationRegistry?: CancellationRegistry;
-  /** When true, log auth/session snapshot on catalog list methods */
-  userAuditOnList?: boolean;
   /** Session row from store (Workers path); used for audit only */
   sessionRecord?: SessionRecord | null;
   /** API key header name for audit redaction */
@@ -286,8 +290,47 @@ async function handleToolsCall(
   const toolArgs = (params?.arguments || {}) as Record<string, unknown>;
   const meta = params?._meta as { progressToken?: string | number } | undefined;
 
+  const startTime = Date.now();
+  const emitToolCall = (
+    outcome: 'ok' | 'error' | 'denied' | 'cancelled',
+    extra?: { errorMessage?: string; principalGroups?: string[] },
+  ): void => {
+    if (!ctx.audit) return;
+    const subject = (() => {
+      const id = resolveIdentityForMcp(
+        ctx.sessionRecord?.identity ?? ctx.auth.identity,
+        ctx.auth.provider ?? null,
+      );
+      if (!id) return undefined;
+      const out: { sub?: string; email?: string; groups?: string[] } = {};
+      if (id.sub) out.sub = id.sub;
+      if (id.email) out.email = id.email;
+      if (id.groups?.length) out.groups = [...id.groups].sort();
+      return Object.keys(out).length ? out : undefined;
+    })();
+    void ctx.audit.emit({
+      kind: 'mcp.tool.call',
+      timestamp: new Date().toISOString(),
+      sessionId: ctx.sessionId,
+      requestId,
+      tool: toolName,
+      outcome,
+      durationMs: Date.now() - startTime,
+      authStrategy: ctx.auth.authStrategy,
+      credentialPrefix: credentialPrefixFromHeaders(
+        ctx.auth.resolvedHeaders,
+        ctx.apiKeyHeader ?? 'x-api-key',
+      ),
+      subject,
+      policyEnforced: ctx.policy?.isEnforced() ?? false,
+      ...(extra?.principalGroups ? { principalGroups: extra.principalGroups } : {}),
+      ...(extra?.errorMessage ? { errorMessage: extra.errorMessage } : {}),
+    });
+  };
+
   const tool = ctx.registries.tools.find((t) => t.name === toolName);
   if (!tool) {
+    emitToolCall('error', { errorMessage: `Unknown tool: ${toolName}` });
     return {
       error: {
         code: JsonRpcErrorCode.MethodNotFound,
@@ -306,6 +349,7 @@ async function handleToolsCall(
         sessionId: ctx.sessionId,
         principalGroups: [...subject.groupSet].sort(),
       });
+      emitToolCall('denied', { principalGroups: [...subject.groupSet].sort() });
       return {
         error: {
           code: JsonRpcErrorCode.PermissionDenied,
@@ -349,6 +393,7 @@ async function handleToolsCall(
       firstText.startsWith('Forbidden:') &&
       ctx.policy?.isEnforced()
     ) {
+      emitToolCall('denied', { errorMessage: firstText });
       return {
         error: {
           code: JsonRpcErrorCode.PermissionDenied,
@@ -356,6 +401,15 @@ async function handleToolsCall(
         },
       };
     }
+    if (result.isError) {
+      if (abortController.signal.aborted) {
+        emitToolCall('cancelled');
+      } else {
+        emitToolCall('error', { errorMessage: firstText });
+      }
+      return { result };
+    }
+    emitToolCall('ok');
     return { result };
   } catch (error) {
     // Check if this was a cancellation
@@ -365,6 +419,7 @@ async function handleToolsCall(
         tool: toolName,
         requestId,
       });
+      emitToolCall('cancelled');
       return {
         error: {
           code: JsonRpcErrorCode.InternalError,
@@ -378,6 +433,7 @@ async function handleToolsCall(
       tool: toolName,
       error: (error as Error).message,
     });
+    emitToolCall('error', { errorMessage: (error as Error).message });
     return {
       error: {
         code: JsonRpcErrorCode.InternalError,
@@ -534,21 +590,23 @@ export async function dispatchMcpMethod(
     };
   }
 
-  if (ctx.userAuditOnList && isMcpCatalogListMethod(method)) {
+  if (ctx.audit && isMcpCatalogListMethod(method)) {
     const header = ctx.apiKeyHeader ?? 'x-api-key';
-    logMcpUserAuditCatalogList({
-      methods: [method],
-      sessionId: ctx.sessionId,
-      requestId,
-      authStrategy: ctx.auth.authStrategy,
-      credentialPrefix: credentialPrefixFromHeaders(ctx.auth.resolvedHeaders, header),
-      provider: ctx.auth.provider,
-      sessionRecord: ctx.sessionRecord ?? null,
-      policy: ctx.policy,
-      tools: ctx.registries.tools,
-      prompts: ctx.registries.prompts,
-      resources: ctx.registries.resources,
-    });
+    void ctx.audit.emit(
+      buildCatalogListEvent({
+        methods: [method],
+        sessionId: ctx.sessionId,
+        requestId,
+        authStrategy: ctx.auth.authStrategy,
+        credentialPrefix: credentialPrefixFromHeaders(ctx.auth.resolvedHeaders, header),
+        provider: ctx.auth.provider,
+        sessionRecord: ctx.sessionRecord ?? null,
+        policy: ctx.policy,
+        tools: ctx.registries.tools,
+        prompts: ctx.registries.prompts,
+        resources: ctx.registries.resources,
+      }),
+    );
   }
 
   switch (method) {

@@ -136,7 +136,7 @@ export function createWorkerRouter(deps: WorkersRouterDeps): {
   fetch: (request: Request) => Promise<Response>;
 } {
   const router = Router();
-  const { auth, tokenStore, sessionStore, registries, policy, config } = deps;
+  const { auth, tokenStore, sessionStore, registries, policy, audit, config } = deps;
   const allowedOrigins = config.server.allowedOrigins;
   const isDev = config.server.nodeEnv === 'development';
 
@@ -170,6 +170,7 @@ export function createWorkerRouter(deps: WorkersRouterDeps): {
       sessionStore,
       registries,
       policy,
+      audit,
       config: handlerConfig,
     }),
   );

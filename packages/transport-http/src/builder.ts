@@ -20,6 +20,7 @@ import type {
   AuthStrategyName,
 } from '@mcp-toolkit/auth/config';
 import type {
+  AuditSink,
   PromptDefinition,
   ResourceDefinition,
   ToolDefinition,
@@ -55,7 +56,7 @@ export interface BuildHttpAppConfig {
     /** Used by `nodeDiscoveryStrategy` to derive the AS base URL (PORT+1). */
     port: number;
   };
-  /** MCP catalog metadata + audit-on-list toggle. */
+  /** MCP catalog metadata. */
   mcp: McpConfig;
   /** Auth slice — only what the transport needs for routing/audit/discovery. */
   auth: {
@@ -100,6 +101,8 @@ export interface BuildHttpAppOptions {
    * the composed app shape.
    */
   policy?: PolicyEnforcer;
+  /** Optional audit sink — emits structured per-tool-call and per-catalog-list events. */
+  audit?: AuditSink;
   /**
    * Token store. Required when the strategy maps RS tokens to provider
    * tokens (`oidc`); ignored by other strategies.
@@ -191,7 +194,7 @@ export function buildHttpApp(opts: BuildHttpAppOptions): Hono {
       liveServers,
       transports,
       sessionStore,
-      userAuditOnList: config.mcp.userAuditOnList,
+      audit: opts.audit,
       apiKeyHeader: config.auth.apikey.headerName,
       staticApiKey: config.auth.apikey.key,
       registries: opts.registries,
