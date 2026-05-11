@@ -21,8 +21,10 @@
         "@mcp-toolkit/auth": "workspace:*",
         "@mcp-toolkit/core": "workspace:*",
         "@mcp-toolkit/mcp": "workspace:*",
+        "@mcp-toolkit/mcp-client": "workspace:*",
         "@mcp-toolkit/policy": "workspace:*",
         "@mcp-toolkit/prompts": "workspace:*",
+        "@mcp-toolkit/proxy-tools": "workspace:*",
         "@mcp-toolkit/resources": "workspace:*",
         "@mcp-toolkit/storage": "workspace:*",
         "@mcp-toolkit/tools": "workspace:*",
@@ -71,6 +73,13 @@
         "zod-to-json-schema": "^3.25.0",
       },
     },
+    "packages/mcp-client": {
+      "name": "@mcp-toolkit/mcp-client",
+      "version": "0.1.0",
+      "dependencies": {
+        "@mcp-toolkit/core": "workspace:*",
+      },
+    },
     "packages/policy": {
       "name": "@mcp-toolkit/policy",
       "version": "0.1.0",
@@ -87,6 +96,16 @@
         "@mcp-toolkit/core": "workspace:*",
         "@mcp-toolkit/mcp": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.24.3",
+        "zod": "^3.23.8",
+      },
+    },
+    "packages/proxy-tools": {
+      "name": "@mcp-toolkit/proxy-tools",
+      "version": "0.1.0",
+      "dependencies": {
+        "@mcp-toolkit/core": "workspace:*",
+        "@mcp-toolkit/mcp": "workspace:*",
+        "@mcp-toolkit/mcp-client": "workspace:*",
         "zod": "^3.23.8",
       },
     },
@@ -286,9 +305,13 @@
 
     "@mcp-toolkit/mcp": ["@mcp-toolkit/mcp@workspace:packages/mcp"],
 
+    "@mcp-toolkit/mcp-client": ["@mcp-toolkit/mcp-client@workspace:packages/mcp-client"],
+
     "@mcp-toolkit/policy": ["@mcp-toolkit/policy@workspace:packages/policy"],
 
     "@mcp-toolkit/prompts": ["@mcp-toolkit/prompts@workspace:packages/prompts"],
+
+    "@mcp-toolkit/proxy-tools": ["@mcp-toolkit/proxy-tools@workspace:packages/proxy-tools"],
 
     "@mcp-toolkit/resources": ["@mcp-toolkit/resources@workspace:packages/resources"],
 

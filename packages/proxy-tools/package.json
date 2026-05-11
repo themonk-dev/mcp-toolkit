@@ -1,0 +1,21 @@
+{
+  "name": "@mcp-toolkit/proxy-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Expose each connected downstream MCP server as one tool to the upstream client. Holds the credential resolver, auth-injection, and proxy-tool factory.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*",
+    "@mcp-toolkit/mcp": "workspace:*",
+    "@mcp-toolkit/mcp-client": "workspace:*",
+    "zod": "^3.23.8"
+  }
+}

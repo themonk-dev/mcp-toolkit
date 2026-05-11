@@ -14,9 +14,9 @@ import type { AppConfig } from './config.ts';
 import { type EnvStringMap, loadConfigFromStrings } from './env-loader.ts';
 
 /**
- * Filter Workers bindings to the 9 grouped env-string entries. KV / D1 /
+ * Filter Workers bindings to the grouped env-string entries. KV / D1 /
  * Queue bindings are objects and would not parse as JSON; the runtime
- * config surface is exactly the 9 string keys.
+ * config surface is exactly these string keys.
  */
 function pickEnvVars(bindings: Record<string, unknown>): EnvStringMap {
   const keys = [
@@ -29,6 +29,7 @@ function pickEnvVars(bindings: Record<string, unknown>): EnvStringMap {
     'MCP_ICON',
     'STORAGE',
     'POLICY',
+    'CONNECTED_SERVERS',
   ] as const;
   const out: EnvStringMap = {};
   for (const k of keys) {

@@ -56,9 +56,9 @@ function resolvePolicyPath(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 /**
- * Pull the 9 grouped JSON env vars out of `process.env` into an
+ * Pull the grouped JSON env vars out of `process.env` into an
  * `EnvStringMap`. Anything else is ignored — the runtime config surface is
- * exactly these 9 keys.
+ * exactly these keys.
  */
 function pickEnvVars(source: NodeJS.ProcessEnv): EnvStringMap {
   return {
@@ -71,6 +71,7 @@ function pickEnvVars(source: NodeJS.ProcessEnv): EnvStringMap {
     MCP_ICON: source.MCP_ICON,
     STORAGE: source.STORAGE,
     POLICY: source.POLICY,
+    CONNECTED_SERVERS: source.CONNECTED_SERVERS,
   };
 }
 

@@ -215,28 +215,38 @@ export function buildMcpRoutes(opts: McpNodeRoutesOptions) {
 
     try {
       const sessionIdHeader = c.req.header(MCP_SESSION_HEADER) ?? undefined;
+      const method = c.req.method;
+
+      // Per the streamable-HTTP spec, only POST carries a JSON-RPC body. GET
+      // opens the server-push SSE stream and DELETE closes a session — both
+      // are bodiless. The original implementation called `c.req.json()`
+      // unconditionally and surfaced a misleading `-32700 Parse error` for
+      // those methods, which broke the client-side SSE channel right after
+      // `initialize` ("Failed to open SSE stream: Bad Request").
       let body: unknown;
-      try {
-        body = await c.req.json();
-      } catch (error) {
-        // Mirror the Workers handler (post-N5): return a clean JSON-RPC parse
-        // error rather than silently swallowing the failure and surfacing as
-        // a misleading "Mcp-Session-Id required" 400 downstream.
-        void logger.warning('mcp_request', {
-          message: 'Malformed JSON body',
-          error: (error as Error).message,
-        });
-        return c.json(
-          {
-            jsonrpc: '2.0',
-            error: { code: -32700, message: 'Parse error' },
-            id: null,
-          },
-          400,
-        );
+      if (method === 'POST') {
+        try {
+          body = await c.req.json();
+        } catch (error) {
+          // Mirror the Workers handler (post-N5): return a clean JSON-RPC parse
+          // error rather than silently swallowing the failure and surfacing as
+          // a misleading "Mcp-Session-Id required" 400 downstream.
+          void logger.warning('mcp_request', {
+            message: 'Malformed JSON body',
+            error: (error as Error).message,
+          });
+          return c.json(
+            {
+              jsonrpc: '2.0',
+              error: { code: -32700, message: 'Parse error' },
+              id: null,
+            },
+            400,
+          );
+        }
       }
 
-      const messages = getJsonRpcMessages(body);
+      const messages = method === 'POST' ? getJsonRpcMessages(body) : [];
       const isInitialize = messages.some((msg) => msg.method === 'initialize');
       const isInitialized = messages.some((msg) => msg.method === 'initialized');
       const initMessage = messages.find((msg) => msg.method === 'initialize');
@@ -245,8 +255,6 @@ export function buildMcpRoutes(opts: McpNodeRoutesOptions) {
           ?.protocolVersion === 'string'
           ? (initMessage?.params as { protocolVersion?: string }).protocolVersion
           : undefined;
-
-      const method = c.req.method;
 
       if (method === 'POST' && !isInitialize && !sessionIdHeader) {
         return c.json(

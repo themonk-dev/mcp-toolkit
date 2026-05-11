@@ -12,8 +12,10 @@ COPY apps/server/package.json ./apps/server/package.json
 COPY packages/auth/package.json ./packages/auth/package.json
 COPY packages/core/package.json ./packages/core/package.json
 COPY packages/mcp/package.json ./packages/mcp/package.json
+COPY packages/mcp-client/package.json ./packages/mcp-client/package.json
 COPY packages/policy/package.json ./packages/policy/package.json
 COPY packages/prompts/package.json ./packages/prompts/package.json
+COPY packages/proxy-tools/package.json ./packages/proxy-tools/package.json
 COPY packages/resources/package.json ./packages/resources/package.json
 COPY packages/storage/package.json ./packages/storage/package.json
 COPY packages/tools/package.json ./packages/tools/package.json

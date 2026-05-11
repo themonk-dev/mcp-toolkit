@@ -1,0 +1,17 @@
+{
+  "name": "@mcp-toolkit/mcp-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Outbound MCP client for mcp-toolkit. Speaks streamable-HTTP JSON-RPC to a downstream MCP server.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mcp-toolkit/core": "workspace:*"
+  }
+}

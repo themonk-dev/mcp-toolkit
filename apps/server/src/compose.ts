@@ -30,8 +30,10 @@ import {
   type ResourceDefinition,
   type ToolDefinition,
 } from '@mcp-toolkit/mcp';
+import { OutboundMcpClient } from '@mcp-toolkit/mcp-client';
 import { getPolicyEngine, type PolicyEnforcer } from '@mcp-toolkit/policy';
 import { examplePrompts } from '@mcp-toolkit/prompts/examples';
+import { buildProxyTools, EnvCredentialResolver } from '@mcp-toolkit/proxy-tools';
 import { exampleResources, startStatusUpdates } from '@mcp-toolkit/resources/examples';
 import {
   MemorySessionStore,
@@ -46,7 +48,9 @@ import type { AppConfig } from './config.ts';
 
 export interface ComposeOptions {
   config: AppConfig;
-  /** Override the tool registry (default: `exampleTools`). */
+  /** Override the local tool registry (default: `exampleTools`). Proxy tools
+   * built from `config.connectedServers` are appended to whichever array
+   * lands here. */
   tools?: ToolDefinition[];
   /** Override the prompt registry (default: `examplePrompts`). */
   prompts?: PromptDefinition[];
@@ -62,6 +66,11 @@ export interface ComposeOptions {
    * Workers — the Workers transport threads the context explicitly.
    */
   getContext?: () => RequestContext | undefined;
+  /**
+   * Override the `fetch` used by the outbound MCP client (for downstream
+   * proxying). Defaults to `globalThis.fetch`. Tests inject a stub here.
+   */
+  outboundFetch?: typeof fetch;
 }
 
 export interface ComposedRuntime {
@@ -196,9 +205,56 @@ export async function compose(opts: ComposeOptions): Promise<ComposedRuntime> {
   // Example arrays are already typed as the open `ToolDefinition[]` /
   // `PromptDefinition[]` / `ResourceDefinition[]` shapes (see each package's
   // `examples/index.ts`), so no variance casts are needed.
-  const tools: ToolDefinition[] = opts.tools ?? exampleTools;
+  const localTools: ToolDefinition[] = opts.tools ?? exampleTools;
   const prompts: PromptDefinition[] = opts.prompts ?? examplePrompts;
   const resources: ResourceDefinition[] = opts.resources ?? exampleResources;
+
+  // Proxy-tool wiring: one upstream tool per configured downstream server.
+  // The credential resolver and outbound client are stateless here; the
+  // factory closes over them so each proxy tool's handler can lazily
+  // initialize its session and cache the downstream `tools/list`.
+  const proxyTools: ToolDefinition[] =
+    config.connectedServers.length > 0
+      ? buildProxyTools({
+          servers: config.connectedServers,
+          resolver: new EnvCredentialResolver(config.connectedServers),
+          client: new OutboundMcpClient(
+            {
+              clientInfo: { name: config.mcp.title, version: config.mcp.version },
+            },
+            { fetch: opts.outboundFetch },
+          ),
+        })
+      : [];
+
+  // Visibility: log the connected-server wiring at boot so the operator sees
+  // which proxy tools came from `CONNECTED_SERVERS`. Only the `id` is logged
+  // — URLs and authType are configuration details that could surface in
+  // shipped logs and don't help diagnose "did my server show up?".
+  if (config.connectedServers.length > 0) {
+    logger.info('compose', {
+      message: 'Connected downstream MCP servers wired as proxy tools',
+      count: config.connectedServers.length,
+      ids: config.connectedServers.map((s) => s.id),
+    });
+  } else {
+    logger.info('compose', {
+      message: 'No connected downstream servers configured (CONNECTED_SERVERS unset or empty)',
+    });
+  }
+
+  // Fail-fast on name collisions between local tools and proxy tools — the
+  // dispatcher resolves tools by name, so two definitions sharing a name
+  // would silently shadow each other.
+  const localNames = new Set(localTools.map((t) => t.name));
+  for (const p of proxyTools) {
+    if (localNames.has(p.name)) {
+      throw new Error(
+        `connected server id "${p.name}" collides with a local tool name`,
+      );
+    }
+  }
+  const tools: ToolDefinition[] = [...localTools, ...proxyTools];
 
   const auth = selectAuthStrategy(config, tokenStore);
   const policy = getPolicyEngine({ content: config.policy.content });
@@ -261,6 +317,9 @@ export async function compose(opts: ComposeOptions): Promise<ComposedRuntime> {
     auth: auth.kind,
     policy: policy?.isEnforced() ?? false,
     tools: tools.length,
+    toolNames: tools.map((t) => t.name),
+    localTools: localTools.length,
+    proxyTools: proxyTools.length,
     prompts: prompts.length,
     resources: resources.length,
   });

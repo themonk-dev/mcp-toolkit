@@ -74,17 +74,12 @@ describe('reconnect (node): multiple back-to-back initializes', () => {
     // happy-path bookkeeping the orphan sweep must preserve.
     expect(runtime.liveServers.size).toBe(2);
 
-    // The Node handler currently parses JSON for every method (including
-    // DELETE) and 400s on an empty body — feed it `{}` so we reach the
-    // DELETE branch that drains the per-session server.
     const deleteReq = new Request('http://localhost/mcp', {
       method: 'DELETE',
       headers: {
         'mcp-session-id': first.sessionId,
         accept: 'application/json, text/event-stream',
-        'content-type': 'application/json',
       },
-      body: '{}',
     });
     const deleteRes = await app.fetch(deleteReq);
     expect(deleteRes.status).toBeLessThan(500);

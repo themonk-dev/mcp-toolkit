@@ -18,6 +18,7 @@ import { authConfigSchema } from '@mcp-toolkit/auth/config';
 import { stringList } from '@mcp-toolkit/core/zod-helpers';
 import { mcpConfigSchema } from '@mcp-toolkit/mcp/config';
 import { policyConfigSchema } from '@mcp-toolkit/policy/config';
+import { connectedServersSchema } from '@mcp-toolkit/proxy-tools/config';
 import { storageConfigSchema } from '@mcp-toolkit/storage/config';
 import { z } from 'zod';
 
@@ -66,6 +67,12 @@ export const appConfigSchema = z
     mcp: mcpConfigSchema.default({}),
     storage: storageConfigSchema.default({}),
     policy: policyConfigSchema.default({}),
+    /**
+     * Downstream MCP servers that this gateway proxies to. Each entry becomes
+     * exactly one upstream tool named by `id`. See
+     * `@mcp-toolkit/proxy-tools/config` for the per-entry schema.
+     */
+    connectedServers: connectedServersSchema,
   })
   .default({});
 

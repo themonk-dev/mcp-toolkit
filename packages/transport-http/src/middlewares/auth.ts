@@ -18,7 +18,11 @@ import type {
   AuthStrategyKind,
   AuthVerifyResult,
 } from '@mcp-toolkit/auth';
-import type { ProviderTokens, SessionIdentity } from '@mcp-toolkit/core';
+import {
+  type ProviderTokens,
+  type SessionIdentity,
+  sharedLogger as logger,
+} from '@mcp-toolkit/core';
 import type { TokenStore } from '@mcp-toolkit/storage';
 import type { Context, MiddlewareHandler } from 'hono';
 
@@ -90,6 +94,12 @@ export function createAuthHeaderMiddleware(
     });
 
     if (!result.ok) {
+      logger.warning('auth_verify', {
+        message: 'Auth verify failed',
+        kind: strategy.kind,
+        requireAuth,
+        challengeStatus: result.challenge?.status ?? 401,
+      });
       if (requireAuth) {
         const status = result.challenge?.status ?? 401;
         const headers = result.challenge?.headers ?? {};
@@ -100,6 +110,12 @@ export function createAuthHeaderMiddleware(
         });
       }
       // Legacy: let unauth requests through; downstream may still 401.
+    } else {
+      logger.debug('auth_verify', {
+        message: 'Auth verify ok',
+        kind: strategy.kind,
+        hasIdentity: Boolean(result.identity),
+      });
     }
 
     // Extract Bearer RS token from the original Authorization header for

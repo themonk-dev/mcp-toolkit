@@ -42,6 +42,12 @@ export interface EnvStringMap {
   MCP_ICON?: string;
   STORAGE?: string;
   POLICY?: string;
+  /**
+   * JSON array of downstream MCP servers to proxy. Each element is one
+   * connected server with its inline credential. See
+   * `@mcp-toolkit/proxy-tools/config` for the per-entry schema.
+   */
+  CONNECTED_SERVERS?: string;
 }
 
 /**
@@ -67,6 +73,27 @@ function parseJsonVar(name: string, raw: string | undefined): Record<string, unk
 }
 
 /**
+ * Parse one env var as a JSON array. Returns `[]` for unset / empty values
+ * so callers can rely on zod schema defaults. Symmetric with
+ * {@link parseJsonVar} — same error shape, opposite kind constraint.
+ */
+function parseJsonArrayVar(name: string, raw: string | undefined): unknown[] {
+  if (raw === undefined || raw.trim() === '') return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(`Invalid JSON in ${name}: ${(e as Error).message}`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(
+      `${name} must be a JSON array, got ${parsed === null ? 'null' : typeof parsed}`,
+    );
+  }
+  return parsed;
+}
+
+/**
  * Compose and validate. Returns a typed `AppConfig` or throws a single
  * `Invalid config: …` error listing all zod issues with their nested paths
  * (so operators see `server.port: …` rather than just `port: …`).
@@ -81,6 +108,10 @@ export function loadConfigFromStrings(env: EnvStringMap): AppConfig {
   const mcpIcon = parseJsonVar('MCP_ICON', env.MCP_ICON);
   const storage = parseJsonVar('STORAGE', env.STORAGE);
   const policy = parseJsonVar('POLICY', env.POLICY);
+  const connectedServers = parseJsonArrayVar(
+    'CONNECTED_SERVERS',
+    env.CONNECTED_SERVERS,
+  );
 
   const composed = {
     server: { ...server, ...runtime },
@@ -88,6 +119,7 @@ export function loadConfigFromStrings(env: EnvStringMap): AppConfig {
     mcp: { ...mcpMeta, icon: mcpIcon },
     storage,
     policy: { content: policy.content as string | undefined },
+    connectedServers,
   };
 
   const result = appConfigSchema.safeParse(composed);

@@ -32,6 +32,7 @@ import type { WebStandardStreamableHTTPServerTransport } from '@modelcontextprot
 import { Hono } from 'hono';
 import { createAuthHeaderMiddleware } from './middlewares/auth.ts';
 import { corsMiddleware } from './middlewares/cors.ts';
+import { requestLogger } from './middlewares/request-log.ts';
 import { createMcpSecurityMiddleware } from './middlewares/security.ts';
 import { buildDiscoveryRoutes } from './routes/discovery.ts';
 import { healthRoutes } from './routes/health.ts';
@@ -139,7 +140,11 @@ export function buildHttpApp(opts: BuildHttpAppOptions): Hono {
   const allowedOrigins = config.server.allowedOrigins;
   const isDev = config.server.nodeEnv === 'development';
 
-  // Global middleware
+  // Global middleware. The request logger runs first so we see *every*
+  // inbound request — including ones that CORS / auth would reject — which
+  // is the only way to diagnose "client says fetch failed but server logs
+  // are silent" issues.
+  app.use('*', requestLogger());
   app.use('*', corsMiddleware({ allowedOrigins, isDev }));
 
   // Routes (discovery / health are unauthenticated by spec — only `/mcp`

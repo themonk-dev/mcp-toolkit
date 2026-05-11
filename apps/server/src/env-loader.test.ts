@@ -177,3 +177,91 @@ describe('env-loader: POLICY handling', () => {
     expect(config.policy.content).toBe('inline wins');
   });
 });
+
+describe('env-loader: CONNECTED_SERVERS', () => {
+  it('defaults to an empty array when unset', () => {
+    const config = loadConfigFromStrings({});
+    expect(config.connectedServers).toEqual([]);
+  });
+
+  it('parses a valid array of downstream server entries', () => {
+    const config = loadConfigFromStrings({
+      CONNECTED_SERVERS: JSON.stringify([
+        {
+          id: 'github',
+          url: 'https://example.com/github/mcp',
+          authType: 'bearer',
+          token: 'ghp_xxx',
+        },
+        {
+          id: 'linear',
+          url: 'https://example.com/linear/mcp',
+          authType: 'api_key',
+          headerName: 'x-api-key',
+          key: 'lin_xxx',
+        },
+      ]),
+    });
+    expect(config.connectedServers).toHaveLength(2);
+    expect(config.connectedServers[0].id).toBe('github');
+    expect(config.connectedServers[1].id).toBe('linear');
+  });
+
+  it('rejects a non-array CONNECTED_SERVERS payload', () => {
+    expect(() =>
+      loadConfigFromStrings({ CONNECTED_SERVERS: JSON.stringify({ id: 'x' }) }),
+    ).toThrow(/CONNECTED_SERVERS must be a JSON array/);
+  });
+
+  it('throws with a path-prefixed message when a secret is empty', () => {
+    expect(() =>
+      loadConfigFromStrings({
+        CONNECTED_SERVERS: JSON.stringify([
+          {
+            id: 'github',
+            url: 'https://example.com/github/mcp',
+            authType: 'bearer',
+            token: '',
+          },
+        ]),
+      }),
+    ).toThrow(/connectedServers\.0\.token/);
+  });
+
+  it('surfaces malformed JSON with the var name in the error', () => {
+    expect(() => loadConfigFromStrings({ CONNECTED_SERVERS: '{not-json' })).toThrow(
+      /Invalid JSON in CONNECTED_SERVERS/,
+    );
+  });
+
+  it('loadNodeConfig threads CONNECTED_SERVERS from process.env into the parsed config', () => {
+    const config = loadNodeConfig({
+      CONNECTED_SERVERS: JSON.stringify([
+        {
+          id: 'github',
+          url: 'https://example.com/mcp',
+          authType: 'bearer',
+          token: 'ghp_xxx',
+        },
+      ]),
+    } as NodeJS.ProcessEnv);
+    expect(config.connectedServers).toHaveLength(1);
+    expect(config.connectedServers[0].id).toBe('github');
+  });
+
+  it('loadWorkersConfig threads CONNECTED_SERVERS from bindings into the parsed config', () => {
+    const config = loadWorkersConfig({
+      CONNECTED_SERVERS: JSON.stringify([
+        {
+          id: 'linear',
+          url: 'https://example.com/mcp',
+          authType: 'api_key',
+          headerName: 'x-api-key',
+          key: 'lin_xxx',
+        },
+      ]),
+    });
+    expect(config.connectedServers).toHaveLength(1);
+    expect(config.connectedServers[0].id).toBe('linear');
+  });
+});
